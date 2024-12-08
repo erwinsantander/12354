@@ -5,12 +5,7 @@
         redirect('admin.php', false);
     }
 
-
-    header("Strict-Transport-Security: max-age=31536000; includeSubDomains");
-header("X-Frame-Options: SAMEORIGIN");
-header("X-Content-Type-Options: nosniff");
-header("Referrer-Policy: strict-origin-when-cross-origin");
-header("Permissions-Policy: geolocation=(self), microphone=()");
+    
 ?>
 
 <!DOCTYPE html>
@@ -55,7 +50,7 @@ header("Permissions-Policy: geolocation=(self), microphone=()");
                 <div class="p-6">
                     <div class="text-center mb-6">
                         <h1 id="page-title" class="text-3xl font-bold text-brand-primary mb-2">Login</h1>
-                        <p class="text-gray-600">Inventory Management System</p>
+                        <p class="text-gray-600">Inventories Management System</p>
                     </div>
 
                     <div id="form-container">
