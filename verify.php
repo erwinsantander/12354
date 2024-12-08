@@ -1,15 +1,6 @@
 <?php
 // Ensure session is started
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
 
-// Check if the token parameter is set and matches the expected format
-if (!isset($_GET['token']) || !preg_match('/^[a-f0-9]{32}$/', $_GET['token'])) {
-    // Redirect to 04.html if the token is missing or doesn't match the expected format
-    header('Location: 404.html');
-    exit();
-}
 
 // Check for messages from previous redirects
 $message = null;
