@@ -10,7 +10,7 @@ if ($session->isUserLoggedIn()) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors = [];
-    
+
     // Generate a random 10-digit ID
     $random_id = str_pad(rand(0, 9999999999), 10, '0', STR_PAD_LEFT);
 
@@ -31,18 +31,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($password !== $confirm_password)
         $errors[] = "Passwords do not match.";
 
-    // Check if email already exists
-    $email_check = $db->query("SELECT * FROM users WHERE email = '{$email}'");
-    if ($db->num_rows($email_check) > 0)
-        $errors[] = "Email already registered.";
+    // Check if email already exists with status 1
+    $email_check_active = $db->query("SELECT * FROM users WHERE email = '{$email}' AND verified = 1");
+    if ($db->num_rows($email_check_active) > 0)
+        $errors[] = "Email already registered and active.";
 
-    // Check if the random ID already exists
-    $id_check = $db->query("SELECT * FROM users WHERE id = '{$random_id}'");
-    while ($db->num_rows($id_check) > 0) {
-        // Regenerate ID if it already exists
-        $random_id = str_pad(rand(0, 9999999999), 10, '0', STR_PAD_LEFT);
-        $id_check = $db->query("SELECT * FROM users WHERE id = '{$random_id}'");
-    }
+    // Check if email exists with status 0
+    $email_check_inactive = $db->query("SELECT * FROM users WHERE email = '{$email}' AND verified = 0");
 
     if (empty($errors)) {
         $hashed_password = password_hash($password, PASSWORD_BCRYPT);
@@ -51,26 +46,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $status = 0;
         $verified = 0;
 
-        // Prepare SQL with the new random ID
-        $sql = "INSERT INTO users (id, name, password, user_level, image, email, status, last_login, code, verified, created_at) 
-                VALUES ('{$random_id}', '{$name}', '{$hashed_password}', {$user_level}, '{$default_image}', '{$email}', {$status}, NULL, '{$verification_code}', {$verified}, NOW())";
+        if ($db->num_rows($email_check_inactive) > 0) {
+            // Update existing record
+            $sql = "UPDATE users SET 
+                    name = '{$name}', 
+                    password = '{$hashed_password}', 
+                    user_level = {$user_level}, 
+                    image = '{$default_image}', 
+                    code = '{$verification_code}', 
+                    verified = {$verified}, 
+                    created_at = NOW() 
+                    WHERE email = '{$email}' AND verified = 0";
+        } else {
+            // Check if the random ID already exists
+            $id_check = $db->query("SELECT * FROM users WHERE id = '{$random_id}'");
+            while ($db->num_rows($id_check) > 0) {
+                // Regenerate ID if it already exists
+                $random_id = str_pad(rand(0, 9999999999), 10, '0', STR_PAD_LEFT);
+                $id_check = $db->query("SELECT * FROM users WHERE id = '{$random_id}'");
+            }
+
+            // Insert new record
+            $sql = "INSERT INTO users (id, name, password, user_level, image, email, status, last_login, code, verified, created_at) 
+                    VALUES ('{$random_id}', '{$name}', '{$hashed_password}', {$user_level}, '{$default_image}', '{$email}', {$status}, NULL, '{$verification_code}', {$verified}, NOW())";
+        }
 
         if ($db->query($sql)) {
             if (sendVerificationEmail($email, $verification_code)) {
-                $_SESSION['signup_email'] = $email; // Store email for verification page
-                $session->msg("s", "Account created successfully. Please verify your email.");
-                redirect('verify.php', false);
+                // Generate a random token
+                $token = bin2hex(random_bytes(16)); // Generates a 32-character hexadecimal token
+
+                // Redirect with the token as a query parameter
+                redirect("verify.php?token={$token}", false);
             } else {
-                $session->msg("d", "Account created, but failed to send verification email.");
-                redirect('verify.php', false);
+                $_SESSION['message'] = json_encode(['type' => 'error', 'text' => 'Account created, but failed to send verification email.']);
+                redirect('index.php', false);
             }
         } else {
-            $session->msg("d", "Failed to create account. Please try again.");
+            $_SESSION['message'] = json_encode(['type' => 'error', 'text' => 'Failed to create account. Please try again.']);
+            redirect('index.php', false);
         }
     } else {
-        $session->msg("d", implode(' ', $errors));
+        $_SESSION['message'] = json_encode(['type' => 'error', 'text' => implode(' ', $errors)]);
+        redirect('index.php', false);
     }
 }
-
-include_once('layouts/header.php');
 ?>

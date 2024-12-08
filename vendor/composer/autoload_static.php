@@ -99,8 +99,8 @@ class ComposerStaticInitb81558b8c96696fbb593e70d4910a86a
         ),
         'Psr\\Http\\Message\\' => 
         array (
-            0 => __DIR__ . '/..' . '/psr/http-factory/src',
-            1 => __DIR__ . '/..' . '/psr/http-message/src',
+            0 => __DIR__ . '/..' . '/psr/http-message/src',
+            1 => __DIR__ . '/..' . '/psr/http-factory/src',
         ),
         'PHPMailer\\PHPMailer\\' => 
         array (

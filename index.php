@@ -1,9 +1,9 @@
 <?php
-    ob_start();
-    require_once('includes/load.php');
-    if ($session->isUserLoggedIn()) {
-        redirect('admin.php', false);
-    }
+ob_start();
+require_once('includes/load.php');
+if ($session->isUserLoggedIn()) {
+    redirect('admin.php', false);
+}
 ?>
 
 <!DOCTYPE html>
@@ -28,7 +28,6 @@
         }
     </script>
     <style>
-        /* Ensure SweetAlert is positioned at the top */
         .swal2-container {
             z-index: 9999;
         }
@@ -36,7 +35,6 @@
 </head>
 <body class="min-h-screen bg-gradient-to-br from-orange-200 to-red-300">
     <?php
-    // Check for messages from previous redirects
     if (isset($_SESSION['message'])) {
         $message = json_decode($_SESSION['message'], true);
         unset($_SESSION['message']);
@@ -54,6 +52,7 @@
                     <div id="form-container">
                         <!-- Login Form -->
                         <form method="post" action="auth.php" id="login-form" class="space-y-4">
+                            <input type="hidden" name="recaptcha_token" id="recaptcha_token">
                             <div id="username-field">
                                 <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
                                 <div class="relative">
@@ -94,7 +93,7 @@
                                 </div>
                             </div>
 
-                            <button type="submit"
+                            <button type="submit" id="login-button"
                                 class="w-full bg-brand-primary text-white py-2 rounded-md hover:bg-red-700 transition duration-300">
                                 Login
                             </button>
@@ -213,7 +212,6 @@
 
         // Form switching logic using event delegation
         document.addEventListener('click', function (e) {
-            // Check if the clicked element or its parent is the switch form link
             const switchFormLink = e.target.closest('#switch-form');
 
             if (switchFormLink) {
@@ -223,21 +221,28 @@
                 const pageTitle = document.getElementById('page-title');
                 const switchFormText = document.getElementById('switch-form-text');
 
-                // Check which form is currently visible
                 if (loginForm.classList.contains('hidden')) {
-                    // Switch back to login form
                     loginForm.classList.remove('hidden');
                     signupForm.classList.add('hidden');
                     pageTitle.textContent = 'Login';
                     switchFormText.innerHTML = 'Don\'t have an account? <a href="#" id="switch-form" class="text-brand-primary hover:underline">Sign Up</a>';
                 } else {
-                    // Switch to signup form
                     loginForm.classList.add('hidden');
                     signupForm.classList.remove('hidden');
                     pageTitle.textContent = 'Sign Up';
                     switchFormText.innerHTML = 'Already have an account? <a href="#" id="switch-form" class="text-brand-primary hover:underline">Login</a>';
                 }
             }
+        });
+
+        grecaptcha.ready(function() {
+            document.getElementById('login-button').addEventListener('click', function(event) {
+                event.preventDefault();
+                grecaptcha.execute('YOUR_SITE_KEY', {action: 'login'}).then(function(token) {
+                    document.getElementById('recaptcha_token').value = token;
+                    document.getElementById('login-form').submit();
+                });
+            });
         });
     </script>
 
