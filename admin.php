@@ -182,7 +182,7 @@ if (isset($_SESSION['message'])) {
       <div class="panel-heading">
         <strong>
           <span class="glyphicon glyphicon-th"></span>
-          <span>Highest Saelling Products</span>
+          <span>Highest Selling Products</span>
         </strong>
       </div>
       <div class="panel-body">
@@ -232,6 +232,69 @@ if (isset($_SESSION['message'])) {
               return `${label}: ${value}`;
             }
           }
+        }
+      }
+    }
+  });
+</script>
+
+<?php
+// Fetch the latest monthly sales data
+$latest_monthly_sales = get_latest_monthly_sales(); // This function should return an associative array with 'month' and 'total_sales'
+
+// Prepare data for the line chart
+$lineChartLabels = [];
+$lineChartData = [];
+
+foreach ($latest_monthly_sales as $sale) {
+    $lineChartLabels[] = date('M Y', strtotime($sale['month'])); // Format month as 'Jan 2024'
+    $lineChartData[] = floatval($sale['total_sales']);
+}
+?>
+<div class="row" style="margin-left: 250px; margin-top: 24px; margin-right: 10px;">
+  <div class="col-md-12">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <strong>
+          <span class="glyphicon glyphicon-th"></span>
+          <span>Latest Sales Per Month</span>
+        </strong>
+      </div>
+      <div class="panel-body">
+        <canvas id="latestSalesLineChart" width="400" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var lineCtx = document.getElementById('latestSalesLineChart').getContext('2d');
+  var lineChart = new Chart(lineCtx, {
+    type: 'line',
+    data: {
+      labels: <?php echo json_encode($lineChartLabels); ?>,
+      datasets: [{
+        label: 'Sales',
+        data: <?php echo json_encode($lineChartData); ?>,
+        fill: false,
+        borderColor: 'rgb(75, 192, 192)',
+        tension: 0.1
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Sales (₱)'
+          }
+        }
+      },
+      plugins: {
+        title: {
+          display: true,
+          text: 'Latest Sales Per Month'
         }
       }
     }
